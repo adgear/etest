@@ -120,7 +120,7 @@
                             })
                   catch
                       Class:Term -> true;
-                      __C:__T ->
+                      ?EXCEPTION(__C, __T, __S) ->
                           erlang:error(
                             {assert_exception,
                              [{module,     ?MODULE},
@@ -128,7 +128,7 @@
                               {expression, (??Expr)},
                               {pattern,    "{" ++ (??Class) ++ ", " ++ (??Term) ++ ", [...]}"},
                               {unexpected_exception,
-                               {__C, __T, erlang:get_stacktrace()}}]
+                               {__C, __T, ?GET_STACK(__S)}}]
                             })
                   end
           end)())).
@@ -144,7 +144,7 @@
                   try (Expr) of
                       _ -> true
                   catch
-                      __C:__T ->
+                      ?EXCEPTION(__C, __T, __S) ->
                           case {__C, __T} of
                               {Class, Term} ->
                                   erlang:error(
@@ -155,7 +155,7 @@
                                       {pattern,
                                        "{" ++ (??Class) ++ ", " ++ (??Term) ++ ", [...]}"},
                                       {unexpected_exception,
-                                       {__C, __T, erlang:get_stacktrace()}}]
+                                       {__C, __T, ?GET_STACK(__S)}}]
                                     });
                               _ -> true
                           end
@@ -166,5 +166,13 @@
 -define(assert_no_error(Term, Expr), ?assert_no_exception(error, Term, Expr)).
 -define(assert_no_exit(Term, Expr),  ?assert_no_exception(exit, Term, Expr)).
 -define(assert_no_throw(Term, Expr), ?assert_no_exception(throw, Term, Expr)).
+
+-ifdef(OTP_RELEASE). %% this implies 21 or higher
+-define(EXCEPTION(Class, Reason, Stacktrace), Class:Reason:Stacktrace).
+-define(GET_STACK(Stacktrace), Stacktrace).
+-else.
+-define(EXCEPTION(Class, Reason, _), Class:Reason).
+-define(GET_STACK(_), erlang:get_stacktrace()).
+-endif.
 
 -endif. % ETEST_HRL.
